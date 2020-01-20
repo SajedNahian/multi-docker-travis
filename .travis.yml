@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t sajednahian/multi-docker -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true sajednahian/multi-docker npm run test -- --coverage
+
+after_success:
+  - docker build -t sajednahian/multi-client ./client
+  - docker build -t sajednahian/multi-nginx ./nginx
+  - docker build -t sajednahian/multi-server ./server
+  - docker build -t sajednahian/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push sajednahian/multi-client
+  - docker push sajednahian/multi-nginx
+  - docker push sajednahian/multi-server
+  - docker push sajednahian/multi-worker
